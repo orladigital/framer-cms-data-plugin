@@ -4,8 +4,10 @@ import {  framer } from "framer-plugin"
 import { ChangeEvent, useEffect, useState } from "react"
 import { db } from "./config/db-config"
 import { addDoc, collection } from "firebase/firestore"
-import { formatFramerCmsData } from "./utils/format-firebase-data"
+import { formatFramerCmsData } from "./utils/format-framer-data"
 import firebaseLogo from "./assets/firebaseLogo.svg"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export function App() {
     
@@ -49,25 +51,30 @@ export function App() {
 
     const handleSyncData = async () => {
         if (!selectedCollection || !firebaseConfig) return
+
+        try {
         const dbFirebase = db(firebaseConfig)
  
         const items: CollectionItem[] = await selectedCollection?.getItems();
-        const parsedFramerCmsItems = items.map(formatFramerCmsData)
-        console.log(parsedFramerCmsItems)
+        const parsedFramerCmsItems = items.filter((item : CollectionItem)=>(!item.draft)).map(formatFramerCmsData)
 
         const formattedFirebaseData = {
             dateBucket: new Date().toISOString(), 
             data : parsedFramerCmsItems
         };
-        console.log(formattedFirebaseData);
         await addDoc(collection(dbFirebase, "framer_cms"), formattedFirebaseData);
-    
+
+        toast.success("Salvo com sucesso!")
+        }catch(e){
+          console.error(e)
+            toast.error(`Ocorreu um erro! ${e}`)
+        }
         console.log("Dados enviados com sucesso!")
     }
 
     return (
-       
-        <div className="flex flex-col gap-4 p-4 text-sm  w-[100%]">
+       <>
+        <div className="flex flex-col gap-4 !p-4 text-sm  w-[100%]">
         <h1 className="text-lg font-semibold text-blue-50">Envie dados do Framer para o Firebase</h1>
         <img src={firebaseLogo} className="w-auto h-24"/>
         <p className="text-gray-600 text-xs">
@@ -99,7 +106,7 @@ export function App() {
               key={key}
               className="input"
               name={key}
-              type="text"
+              type="password"
               placeholder={`Cole seu ${key}`}
               onChange={onChangeInput}
             />
@@ -113,6 +120,9 @@ export function App() {
         >
           Sincronizar dados
         </button>
+        
       </div>
+       <ToastContainer />
+       </>
     )
 }
