@@ -1,46 +1,100 @@
-import { framer, CanvasNode } from "framer-plugin"
-import { useState, useEffect } from "react"
+import type { Collection, CollectionItem } from "framer-plugin"
 import "./App.css"
+import { framer } from "framer-plugin"
+import { ChangeEvent, useEffect, useState } from "react"
+import { db } from "./config/db-config"
+import { addDoc, collection } from "firebase/firestore"
+import { formatFramerCmsData } from "./utils/format-firebase-data"
+export function App() {
+    
+    const [collections, setCollections] = useState<Collection[]>([])
+    const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null)
+    const [firebaseConfig, setFirebaseConfig] = useState<object>({
+        apiKey: "",
+        authDomain: "",
+        projectId: "",
+        storageBucket: "",
+        messagingSenderId: "",
+        appId: ""
+    })
 
-framer.showUI({
-    position: "top right",
-    width: 240,
-    height: 95,
-})
-
-function useSelection() {
-    const [selection, setSelection] = useState<CanvasNode[]>([])
 
     useEffect(() => {
-        return framer.subscribeToSelection(setSelection)
+        framer.showUI({
+            width: 340,
+            height: 340,
+            resizable: false,
+        })
+
+        Promise.all([framer.getCollections(), framer.getActiveCollection()]).then(([collections, activeCollection]) => {
+          
+            setCollections(collections)
+            setSelectedCollection(activeCollection)
+        })
     }, [])
 
-    return selection
-}
+    const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFirebaseConfig((prev) => ({ ...prev, [name]: value }));
+    }
 
-export function App() {
-    const selection = useSelection()
-    const layer = selection.length === 1 ? "layer" : "layers"
+    const selectCollection = (event: ChangeEvent<HTMLSelectElement>) => {
+        const collection = collections.find(collection => collection.id === event.currentTarget.value)
+        if (!collection) return
+        setSelectedCollection(collection)
+    }
 
-    const handleAddSvg = async () => {
-        await framer.addSVG({
-            svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path fill="#999" d="M20 0v8h-8L4 0ZM4 8h8l8 8h-8v8l-8-8Z"/></svg>`,
-            name: "Logo.svg",
-        })
+
+    const handleSyncData = async () => {
+        if (!selectedCollection || !firebaseConfig) return
+        const dbFirebase = db(firebaseConfig)
+ 
+        const items: CollectionItem[] = await selectedCollection?.getItems();
+        const parsedFramerCmsItems = items.map(formatFramerCmsData)
+        console.log(parsedFramerCmsItems)
+
+        const formattedFirebaseData = {
+            dateBucket: new Date().toISOString(), 
+            data : parsedFramerCmsItems
+        };
+        console.log(formattedFirebaseData);
+        await addDoc(collection(dbFirebase, "framer_cms"), formattedFirebaseData);
+    
+        console.log("Dados enviados com sucesso!")
     }
 
     return (
-        <main>
-            <p>
-                Welcome! Check out the{" "}
-                <a href="https://framer.com/developers/plugins/introduction" target="_blank">
-                    Docs
-                </a>{" "}
-                to start. You have {selection.length} {layer} selected.
-            </p>
-            <button className="framer-button-primary" onClick={handleAddSvg}>
-                Insert Logo
-            </button>
-        </main>
+        <div className="export-collection">
+
+            <div className="footer">
+                <select
+                    onChange={selectCollection}
+                    className={!selectedCollection ? "footer-select footer-select--unselected" : "footer-select"}
+                    value={selectedCollection?.id ?? ""}
+                >
+                    <option value="" disabled>
+                        Select Collection…
+                    </option>
+
+                    {collections.map(collection => (
+                        <option key={collection.id} value={collection.id}>
+                            {collection.name}
+                        </option>
+                    ))}
+                </select>
+                
+                <input className="input" name="apiKey" type="text" placeholder="Cole sua apiKey" onChange={(e)=>{onChangeInput(e)}}/>
+                <input className="input" name="authDomain" type="text" placeholder="Cole sua authDomain" onChange={(e)=>{onChangeInput(e)}}/>
+                <input className="input" name="projectId" type="text" placeholder="Cole sua projectId" onChange={(e)=>{onChangeInput(e)}}/>
+                <input className="input" name="storageBucket" type="text" placeholder="Cole sua storageBucket" onChange={(e)=>{onChangeInput(e)}}/>
+                <input className="input" name="messagingSenderId" type="text" placeholder="Cole sua messagingSenderId" onChange={(e)=>{onChangeInput(e)}}/>
+                <input className="input" name="appId" type="text" placeholder="Cole sua appId" onChange={(e)=>{onChangeInput(e)}}/>
+                <div className="footer-actions">
+                    <button disabled={!selectedCollection} onClick={()=>{handleSyncData()}}>
+                        Sincronizar dados
+                    </button>
+                </div>
+            </div>
+        </div>
     )
 }
