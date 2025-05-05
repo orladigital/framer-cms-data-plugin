@@ -1,10 +1,12 @@
 import type { Collection, CollectionItem } from "framer-plugin"
 import "./App.css"
-import { framer } from "framer-plugin"
+import {  framer } from "framer-plugin"
 import { ChangeEvent, useEffect, useState } from "react"
 import { db } from "./config/db-config"
 import { addDoc, collection } from "firebase/firestore"
 import { formatFramerCmsData } from "./utils/format-firebase-data"
+import firebaseLogo from "./assets/firebaseLogo.svg"
+
 export function App() {
     
     const [collections, setCollections] = useState<Collection[]>([])
@@ -22,7 +24,7 @@ export function App() {
     useEffect(() => {
         framer.showUI({
             width: 340,
-            height: 340,
+            height: 540,
             resizable: false,
         })
 
@@ -64,37 +66,53 @@ export function App() {
     }
 
     return (
-        <div className="export-collection">
-
-            <div className="footer">
-                <select
-                    onChange={selectCollection}
-                    className={!selectedCollection ? "footer-select footer-select--unselected" : "footer-select"}
-                    value={selectedCollection?.id ?? ""}
-                >
-                    <option value="" disabled>
-                        Select Collection…
-                    </option>
-
-                    {collections.map(collection => (
-                        <option key={collection.id} value={collection.id}>
-                            {collection.name}
-                        </option>
-                    ))}
-                </select>
-                
-                <input className="input" name="apiKey" type="text" placeholder="Cole sua apiKey" onChange={(e)=>{onChangeInput(e)}}/>
-                <input className="input" name="authDomain" type="text" placeholder="Cole sua authDomain" onChange={(e)=>{onChangeInput(e)}}/>
-                <input className="input" name="projectId" type="text" placeholder="Cole sua projectId" onChange={(e)=>{onChangeInput(e)}}/>
-                <input className="input" name="storageBucket" type="text" placeholder="Cole sua storageBucket" onChange={(e)=>{onChangeInput(e)}}/>
-                <input className="input" name="messagingSenderId" type="text" placeholder="Cole sua messagingSenderId" onChange={(e)=>{onChangeInput(e)}}/>
-                <input className="input" name="appId" type="text" placeholder="Cole sua appId" onChange={(e)=>{onChangeInput(e)}}/>
-                <div className="footer-actions">
-                    <button disabled={!selectedCollection} onClick={()=>{handleSyncData()}}>
-                        Sincronizar dados
-                    </button>
-                </div>
-            </div>
+       
+        <div className="flex flex-col gap-4 p-4 text-sm  w-[100%]">
+        <h1 className="text-lg font-semibold text-blue-50">Envie dados do Framer para o Firebase</h1>
+        <img src={firebaseLogo} className="w-auto h-24"/>
+        <p className="text-gray-600 text-xs">
+          Escolha uma coleção e preencha as credenciais do seu projeto Firebase para exportar os dados do CMS Framer.
+        </p>
+        <div className="w-auto h-[1px] bg-blue-50 my-2"></div>
+        <div className="flex flex-col gap-2">
+          <label className="text-blue-50 opacity-70 font-medium">Coleção do Framer:</label>
+          <select
+            onChange={selectCollection}
+            value={selectedCollection?.id ?? ""}
+            className="select"
+          >
+            <option value="" disabled>
+              Selecione uma coleção…
+            </option>
+            {collections.map((collection) => (
+              <option key={collection.id} value={collection.id}>
+                {collection.name}
+              </option>
+            ))}
+          </select>
         </div>
+  
+        <div className="flex flex-col gap-2">
+          <label className="text-blue-50 opacity-70 font-medium">Credenciais Firebase:</label>
+          {Object.keys(firebaseConfig).map((key) => (
+            <input
+              key={key}
+              className="input"
+              name={key}
+              type="text"
+              placeholder={`Cole seu ${key}`}
+              onChange={onChangeInput}
+            />
+          ))}
+        </div>
+  
+        <button
+          disabled={!selectedCollection }
+          onClick={handleSyncData}
+          className="mt-2 p-2 rounded bg-blue-600 text-white font-semibold disabled:bg-gray-400"
+        >
+          Sincronizar dados
+        </button>
+      </div>
     )
 }
