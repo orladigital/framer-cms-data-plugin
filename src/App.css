@@ -25,7 +25,6 @@
     pointer-events: none;
 }
 
-/* Divider under the titlebar. */
 .empty-state::before {
     content: "";
     border-top: 1px solid var(--framer-color-divider);
