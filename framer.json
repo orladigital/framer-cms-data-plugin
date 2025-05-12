@@ -1,6 +1,6 @@
 {
   "id": "f11ad3",
-  "name": "Orla Framer Cms Data Plugin",
+  "name": "Orla Data",
   "modes": ["canvas"],
-  "icon": "/public/faviconOrla.svg"
+  "icon": "/faviconOrla.svg"
 }
