@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+.export-collection {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: left;
+    height: 100%;
+    padding: 0 15px 15px 15px;
+}
+
+.input,  .select{
+    width: auto;
+    
+}
+
+.Toastify__close-button {
+   width: auto !important;
+}
+
+
+.button-password-visibility{
+    width: 24px;
+    height: 24px;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    user-select: none;
+    pointer-events: none;
+}
+
+.empty-state::before {
+    content: "";
+    border-top: 1px solid var(--framer-color-divider);
+    position: absolute;
+    width: 100%;
+    top: 0;
+}
+
+.empty-state-image {
+    width: 180px;
+}
+
+.empty-state-message {
+    color: var(--framer-color-text-tertiary);
+    width: 140px;
+    text-align: center;
+}
+
+.footer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.footer-select {
+    width: 100%;
+}
+
+[data-framer-theme="light"] .footer-select--unselected {
+    color: #999999;
+}
+
+[data-framer-theme="dark"] .footer-select--unselected {
+    color: #666666;
+}
+
+.footer-actions button {
+    flex-shrink: 1;
+}
+
+.preview-container {
+    position: relative;
+    height: 100%;
+}
+
+.preview-container-image,
+.preview-container-table {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 300ms;
+}
+
+.visible {
+    opacity: 1;
+}
