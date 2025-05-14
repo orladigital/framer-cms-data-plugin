@@ -24,5 +24,5 @@ export function formatFramerCmsData(item: CollectionItem): Record<string, any> {
     }
   }
 
-  return { id: item.id, itemDate: result };
+  return { id: item.id, itemData: result, slug: item.slug };
 }
