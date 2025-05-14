@@ -9,10 +9,4 @@ export function useLoading() {
   };
 
   return { isLoading, controlLoading };
-}
-
-
-const loadingViewModel = useLoading();
-export const { isLoading, controlLoading } = loadingViewModel;
-
-
+} 

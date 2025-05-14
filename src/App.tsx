@@ -8,12 +8,14 @@ import { formatFramerCmsData } from "./utils/format-framer-data";
 import firebaseLogo from "./assets/framerFirebase.svg";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { controlLoading, LoadingComponent } from "./components/loading/exports";
+import { useLoading } from "./components/loading/useLoading";
+import { LoadingComponent } from "./components/loading/Loading";
 import { useFirebaseConfig } from "./hooks/useFirebaseConfig";
 import { useCollections } from "./hooks/useCollections";
 import { FormattedFirebaseData } from "./types/types";
 
 export function App() {
+  const { controlLoading, isLoading } = useLoading();
   const [showPasswords, setShowPasswords] = useState(false);
   const { firebaseConfig, updateFirebaseConfig, isConfigValid } = useFirebaseConfig();
   const { collections, selectedCollection, selectCollection } = useCollections();
@@ -134,7 +136,7 @@ export function App() {
         </button>
       </div>
       <ToastContainer />
-      <LoadingComponent />
+      <LoadingComponent loading={isLoading} />
     </>
   );
 }
