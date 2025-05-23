@@ -2,7 +2,7 @@ import { CollectionItem } from "framer-plugin";
 
 export function formatFramerCmsData(item: CollectionItem): Record<string, any> {
   const result: Record<string, any> = {};
-
+  const slugByLocale = JSON.stringify(item.slugByLocale);
   for (const key in item.fieldData) {
     const value = item.fieldData[key];
 
@@ -24,5 +24,5 @@ export function formatFramerCmsData(item: CollectionItem): Record<string, any> {
     }
   }
 
-  return { id: item.id, itemData: result, slug: item.slug };
+  return { id: item.id, itemData: result, slug: item.slug, slugByLocale };
 }
