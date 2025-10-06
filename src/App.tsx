@@ -2,23 +2,31 @@ import type { CollectionItem } from "framer-plugin";
 import "./App.css";
 import { framer } from "framer-plugin";
 import { useEffect, useState } from "react";
-import { db } from "./config/db-config";
-import { addDoc, collection } from "firebase/firestore";
+
 import { formatFramerCmsData } from "./utils/format-framer-data";
 import firebaseLogo from "./assets/framerFirebase.svg";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLoading } from "./components/loading/useLoading";
 import { LoadingComponent } from "./components/loading/Loading";
-import { useFirebaseConfig } from "./hooks/useFirebaseConfig";
 import { useCollections } from "./hooks/useCollections";
-import { FormattedFirebaseData } from "./types/types";
+import { FormattedFramerCmsData } from "./types/types";
+import { SupportedDBs } from "./exporters/supportedDbs";
+import { DbCredentialsStructure } from "./exporters/connectionsConfig";
 
+import { dbParametersConfig } from "./config/dbParametersConfig";
+import { exportedData } from "./hooks/exportedData";
 export function App() {
   const { controlLoading, isLoading } = useLoading();
-  const [showPasswords, setShowPasswords] = useState(false);
-  const { firebaseConfig, updateFirebaseConfig, isConfigValid } = useFirebaseConfig();
   const { collections, selectedCollection, selectCollection } = useCollections();
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [dbType, setDbType] = useState<SupportedDBs>(SupportedDBs.FIREBASE);
+  const [dbCredentials, setDbCredentials] = useState<DbCredentialsStructure>(dbParametersConfig[dbType].credentialsIterable);
+
+  useEffect(() => {
+      setDbCredentials(dbParametersConfig[dbType].credentialsIterable);
+  }, [dbType]);
+
 
   useEffect(() => {
     framer.showUI({
@@ -28,36 +36,42 @@ export function App() {
     });
   }, []);
 
-  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputCredentialsChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    await updateFirebaseConfig(name, value);
+    //implementar validation do nome do campo para o dbType
+    if(true) {
+    setDbCredentials(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleCollectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     selectCollection(e.target.value);
   };
 
+  function handleDbTypeChange(dbType: SupportedDBs) {
+    setDbType(dbType);
+  }
+
   const handleSyncData = async () => {
-    if (!selectedCollection || !isConfigValid) return;
+    if (!selectedCollection) return;
 
     controlLoading(true);
 
     try {
-      const dbFirebase = db(firebaseConfig);
       const items: CollectionItem[] = await selectedCollection.getItems();
 
       const parsedFramerCmsItems = items
         .filter((item: CollectionItem) => !item.draft)
         .map(formatFramerCmsData);
 
-      const formattedFirebaseData: FormattedFirebaseData = {
+      const formattedFirebaseData: FormattedFramerCmsData = {
         dateBucket: new Date().toISOString(),
         collectionId: selectedCollection.id,
         collectionName: selectedCollection.name,
         data: parsedFramerCmsItems,
       };
 
-      await addDoc(collection(dbFirebase, "framer_cms"), formattedFirebaseData);
+      await exportedData(dbType, dbCredentials, formattedFirebaseData);
       toast.success("Saved successfully!");
     } catch (e) {
       console.error(e);
@@ -96,10 +110,18 @@ export function App() {
             ))}
           </select>
         </div>
+          <label className="opacity-70 font-medium">Select Database</label>
+        <div className="flex flex-row gap-2 w-full">
+          {Object.values(SupportedDBs).map((buttonDbType, index) => (
+            <button key={index} onClick={() => handleDbTypeChange(buttonDbType)} className="button !w-[33%]" disabled={dbType === buttonDbType}>
+              <img src={dbParametersConfig[buttonDbType].image} className="w-full h-full" />
+            </button>
+          ))}
+        </div>
 
         <div className="flex flex-col gap-2">
           <div className="flex justify-end items-center">
-            <h3 className="opacity-70 font-medium">Firebase Credentials</h3>
+            <h3 className="opacity-70 font-medium">{dbType} Credentials</h3>
             <p className="text-[10px] !ml-auto !mr-1">
               {showPasswords ? "Hide passwords: " : "Show passwords: "}
             </p>
@@ -111,15 +133,15 @@ export function App() {
               {showPasswords ? "🔒" : "👁️"}
             </button>
           </div>
-          {Object.keys(firebaseConfig).map((key) => (
+          {dbCredentials && Object.keys(dbCredentials).map((key) => (
             <input
               key={key}
               className="input"
               name={key}
               type={showPasswords ? "text" : "password"}
               placeholder={`Enter your ${key}`}
-              onChange={handleInputChange}
-              value={firebaseConfig[key as keyof typeof firebaseConfig]}
+              onChange={handleInputCredentialsChange}
+              value={dbCredentials[key as keyof typeof dbCredentials]}
             />
           ))}
         </div>
@@ -127,7 +149,7 @@ export function App() {
         <button
           disabled={
             !selectedCollection ||
-            !isConfigValid
+            Object.values(dbCredentials).some(value => value === "")
           }
           onClick={handleSyncData}
           className="mt-2 p-2 rounded bg-blue-600 text-white font-semibold disabled:bg-gray-400"

@@ -9,7 +9,7 @@ export interface FirebaseConfig {
   appId: string;
 }
 
-export interface FormattedFirebaseData {
+export interface FormattedFramerCmsData {
     dateBucket: string;
     collectionId: string;
     collectionName: string;

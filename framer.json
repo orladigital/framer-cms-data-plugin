@@ -1,6 +1,6 @@
 {
   "id": "f11ad3",
-  "name": "Orla Data",
+  "name": "Export2Database",
   "modes": ["canvas"],
-  "icon": "/faviconOrla.svg"
+  "icon": "/export2database-favIcon.svg"
 }
